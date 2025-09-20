@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ShardCloud Client — File Manager</title>
+  <style>
+    :root{
+      --bg:#ffffff; --ink:#0b1b3a; --muted:#5b6b8b;
+      --blue:#246bff; --blue-600:#1e52cc;
+      --green:#17b26a; --red:#ef4444; --amber:#f59e0b;
+      --card:#ffffff; --shadow:0 8px 24px rgba(10,30,80,0.10);
+      --ring:0 0 0 3px rgba(36,107,255,0.18);
+      --radius:16px;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      --mono: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans)}
+    a{color:var(--blue); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    /* Header */
+    header{
+      position:sticky; top:0; z-index:30;
+      background:linear-gradient(180deg,#fff 0%,#fff 70%,rgba(255,255,255,0.65) 100%);
+      border-bottom:1px solid #e9eefc; backdrop-filter:saturate(1.2) blur(6px);
+    }
+    .container{max-width:1100px; margin:0 auto; padding:18px}
+    .nav{display:flex; align-items:center; justify-content:space-between; gap:16px}
+    .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px}
+    .logo{
+      width:40px; height:40px; display:grid; place-items:center; border-radius:12px;
+      background:radial-gradient(120% 120% at 0% 0%, #7aa5ff 0%, #246bff 55%, #1e52cc 100%); box-shadow:var(--shadow);
+    }
+    .tag{font-size:12px; color:#3a67ff; background:#e9f0ff; padding:4px 8px; border-radius:999px; border:1px solid #d7e4ff}
+    .pill{display:inline-flex; align-items:center; gap:10px; padding:8px 10px; background:#f5f8ff; border:1px solid #e3ebff; border-radius:999px; font-size:13px; color:#3a4b74}
+    .kbd{font-family:var(--mono); background:#f4f7ff; border:1px solid #e0e8ff; padding:2px 6px; border-radius:8px; font-size:12px}
+    .btn{
+      appearance:none; border:none; background:var(--blue); color:#fff; padding:10px 16px; border-radius:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow);
+    }
+    .btn:hover{background:var(--blue-600)}
+    .btn:disabled{opacity:0.5; cursor:not-allowed}
+    .btn.ghost{background:transparent; color:var(--blue); border:1px solid #d7e4ff}
+    .btn.ghost:hover{background:#f8faff}
+    .btn.danger{background:var(--red); border-color:var(--red)}
+    .btn.danger:hover{background:#dc2626}
+    .btn.sm{padding:6px 12px; font-size:12px; border-radius:10px}
+
+    /* Layout */
+    main{padding:20px 18px}
+    .grid{display:grid; gap:18px; margin-top:18px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    @media (max-width:900px){ .grid-2{grid-template-columns:1fr} }
+    .card{background:var(--card); border:1px solid #e9eefc; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
+    .card h3{margin:0 0 8px; font-size:18px}
+    .muted{color:var(--muted)}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+    /* Upload section */
+    input[type="file"]{width:100%; padding:10px 12px; border:1px solid #dfe7fb; border-radius:12px; outline:none}
+    input[type="text"], input[type="url"]{width:100%; padding:10px 12px; border:1px solid #dfe7fb; border-radius:12px; outline:none}
+    input:focus{box-shadow:var(--ring); border-color:#cfe0ff}
+    .progress-bar{width:100%; height:8px; background:#f1f5f9; border-radius:4px; overflow:hidden; margin:8px 0}
+    .progress-fill{height:100%; background:linear-gradient(90deg,#7aa5ff,#246bff); border-radius:4px; width:0%; transition:width .2s ease}
+    .status{margin-top:8px; padding:8px 12px; border-radius:8px; font-size:13px}
+    .status.success{background:#ecfdf5; color:#065f46; border:1px solid #d1fae5}
+    .status.error{background:#fef2f2; color:#991b1b; border:1px solid #fecaca}
+    .status.info{background:#eff6ff; color:#1e40af; border:1px solid #dbeafe}
+
+    /* Library table */
+    .table-container{overflow-x:auto; margin-top:12px}
+    table{width:100%; border-collapse:collapse}
+    th, td{text-align:left; padding:12px 8px; border-bottom:1px solid #f1f5f9}
+    th{font-weight:600; color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.5px}
+    tbody tr:hover{background:#f8faff}
+    .btn-sm{padding:6px 12px; font-size:12px}
+
+    /* Profile dropdown */
+    .profile-container{position:relative; margin-left:10px}
+    .profile-dropdown{
+      position:absolute; top:44px; right:0; background:#fff; border:1px solid #c7d8ff;
+      border-radius:12px; box-shadow:0 6px 20px rgba(12,30,80,0.12); min-width:180px; display:none; flex-direction:column; z-index:100;
+    }
+    .profile-dropdown.show{display:flex}
+    .profile-item{padding:10px 16px; font-size:14px; color:#334155; text-align:left; background:transparent; border:none; cursor:pointer; width:100%; text-decoration:none}
+    .profile-item:hover,.profile-item:focus{background:#eaf2ff; outline:none; color:#1e40af}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="white" opacity=".35"/>
+            <path d="M12 5.2l6 3.4v6.8l-6 3.4-6-3.4V8.6l6-3.4z" fill="white"/>
+          </svg>
+        </div>
+        <span>ShardCloud Client</span>
+        <span class="tag">File Manager</span>
+      </div>
+      <div class="row">
+        <span class="pill">User: <span class="kbd"><%= name %></span></span>
+        <div class="profile-container">
+          <button id="profileBtn" class="btn ghost sm" aria-haspopup="true" aria-expanded="false" aria-label="User menu" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="border-radius:50%; background:#dde6ff; padding:2px;">
+              <circle cx="12" cy="7" r="4" />
+              <path d="M5.5 21a7.5 7.5 0 0 1 13 0" />
+            </svg>
+          </button>
+          <div id="profileDropdown" class="profile-dropdown" role="menu" aria-hidden="true" tabindex="-1">
+            <a href="/profile" role="menuitem" class="profile-item">Profile Info</a>
+            <a href="/logout" role="menuitem" class="profile-item">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="grid">
+      <!-- Upload Section -->
+      <div class="card">
+        <h3>Upload Files</h3>
+        <p class="muted">Select and upload files to your secure storage</p>
+        <div style="margin-top:12px">
+          <input type="file" id="fileInput" multiple/>
+          <div class="row" style="margin-top:10px">
+            <button id="uploadBtn" class="btn" type="button">Upload</button>
+            <button id="clearBtn" class="btn ghost" type="button">Clear</button>
+          </div>
+          <div class="progress-bar" id="progressBar" style="display:none">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div id="uploadStatus" class="muted" style="margin-top:8px; font-size:13px"></div>
+          <div id="uploadResult" class="upload-result" style="display:none; white-space:pre-wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Library Section -->
+    <div class="card" style="margin-top:18px">
+      <div class="row" style="justify-content:space-between; align-items:center">
+        <div>
+          <h3 style="margin:0">Your Files</h3>
+          <p class="muted" style="margin:4px 0 0">Files stored and referenced in database</p>
+        </div>
+        <button id="refreshLibrary" class="btn ghost" type="button">Refresh</button>
+      </div>
+
+      <div class="table-container">
+        <table id="libraryTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Size</th>
+              <th>Type</th>
+              <th>Uploaded</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" class="muted" style="text-align:center; padding:20px">Loading files...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // User ID injected from server-side rendering (EJS)
+    const USER_ID = "<%= userId %>"; // Server injects this
+    const API_BASE = 'http://localhost:3000'; // Storage server
+
+    // DOM elements
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const uploadResult = document.getElementById('uploadResult');
+    const refreshLibrary = document.getElementById('refreshLibrary');
+    const libraryTable = document.getElementById('libraryTable');
+
+    // Profile dropdown
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+
+    // Utils
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function showStatus(message, type = 'info') {
+      uploadStatus.textContent = message;
+      uploadStatus.className = `status ${type}`;
+      uploadStatus.style.display = 'block';
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Upload functionality
+async function uploadFiles() {
+  const files = fileInput.files;
+  if (!files || files.length === 0) {
+    showStatus('Please select files to upload', 'error');
+    return;
+  }
+
+  uploadBtn.disabled = true;
+  progressBar.style.display = 'block';
+  uploadResult.style.display = 'none';
+
+  let completed = 0;
+  const results = [];
+  const errors = [];
+
+  for (const file of files) {
+    try {
+      console.log(`Processing file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+      
+      // Step 1: Upload to storage API
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadResponse = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(`Storage upload failed (${uploadResponse.status}): ${errorText}`);
+      }
+
+      const uploadResult = await uploadResponse.json();
+      console.log(`Storage upload successful for ${file.name}:`, uploadResult);
+
+      // Step 2: Save metadata to database
+      const metadataPayload = {
+        fileId: uploadResult.fileId,
+        filename: file.name,
+        size: file.size,
+        mimeType: file.type,
+        path: uploadResult.path,
+        storageRoot: uploadResult.storageRoot || 'default',
+        hash: uploadResult.hash
+      };
+
+      console.log(`Saving metadata for ${file.name}:`, metadataPayload);
+
+      const metadataResponse = await fetch('/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(metadataPayload)
+      });
+
+      if (!metadataResponse.ok) {
+        const errorData = await metadataResponse.json();
+        throw new Error(`Database save failed (${metadataResponse.status}): ${errorData.error || 'Unknown error'}`);
+      }
+
+      const metadataResult = await metadataResponse.json();
+      console.log(`Metadata saved successfully for ${file.name}:`, metadataResult);
+
+      results.push(`✓ ${file.name}: Uploaded and saved successfully`);
+    } catch (error) {
+      console.error(`Error processing ${file.name}:`, error);
+      results.push(`✗ ${file.name}: ${error.message}`);
+      errors.push({ filename: file.name, error: error.message });
+    }
+
+    completed++;
+    const percent = (completed / files.length) * 100;
+    progressFill.style.width = `${percent}%`;
+    showStatus(`Processing ${completed}/${files.length} files...`, 'info');
+  }
+
+  uploadBtn.disabled = false;
+  progressBar.style.display = 'none';
+  uploadResult.textContent = results.join('\n');
+  uploadResult.style.display = 'block';
+  
+  // Show summary
+  const successCount = results.filter(r => r.startsWith('✓')).length;
+  if (successCount === files.length) {
+    showStatus(`All ${successCount} files uploaded successfully!`, 'success');
+  } else {
+    showStatus(`${successCount}/${files.length} files uploaded successfully. ${errors.length} failed.`, 'error');
+  }
+
+  // Log detailed errors for debugging
+  if (errors.length > 0) {
+    console.group('Upload Errors Details:');
+    errors.forEach(err => console.error(`${err.filename}:`, err.error));
+    console.groupEnd();
+  }
+
+  loadLibrary(); // Refresh library
+}
+
+
+    // Load user's files from database (server uses populate() to get full info)
+    async function loadLibrary() {
+      try {
+        const response = await fetch(`/users/${USER_ID}/files`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const files = await response.json();
+        renderLibrary(files);
+      } catch (error) {
+        console.error('Library load error:', error);
+        renderLibrary([]);
+      }
+    }
+
+function renderLibrary(files) {
+  const tbody = libraryTable.querySelector('tbody');
+
+  if (!files || files.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="muted" style="text-align:center; padding:20px">No files found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = files.map(file => {
+    // Make sure we're using the correct fileId field
+    const fileIdToDelete = file.fileId; // This should match what's stored in the database
+    
+    return `
+      <tr>
+        <td title="${escapeHtml(file.filename || 'Unknown')}">${escapeHtml(file.filename || 'Unknown')}</td>
+        <td>${formatFileSize(file.size || 0)}</td>
+        <td>${escapeHtml(file.mimeType || 'Unknown')}</td>
+        <td>${file.uploadedAt ? new Date(file.uploadedAt).toLocaleString() : 'Unknown'}</td>
+        <td>
+          <button class="btn btn-sm ghost" onclick="downloadFile('${escapeHtml(fileIdToDelete)}', '${escapeHtml(file.filename)}')">Download</button>
+          <button class="btn btn-sm danger" onclick="deleteFile('${escapeHtml(fileIdToDelete)}', '${escapeHtml(file.filename)}')" style="margin-left:8px">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+    // Download functionality
+    function downloadFile(fileId, filename) {
+      const url = `/files/${encodeURIComponent(fileId)}/download`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Delete functionality
+    async function deleteFile(fileId, filename) {
+      if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+        return;
+      }
+      try {
+        const response = await fetch(`/files/${encodeURIComponent(fileId)}`, { 
+          method: 'DELETE' 
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showStatus(`File "${filename}" deleted successfully`, 'success');
+          loadLibrary(); // Refresh library
+        } else {
+          showStatus(`Delete failed: ${result.error || 'Unknown error'}`, 'error');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        showStatus('Delete failed: Network error', 'error');
+      }
+    }
+
+    // Profile dropdown functionality
+    profileBtn.addEventListener('click', () => {
+      const shown = profileDropdown.classList.toggle('show');
+      profileBtn.setAttribute('aria-expanded', shown ? 'true' : 'false');
+      if (shown) profileDropdown.focus();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!profileDropdown.contains(event.target) && event.target !== profileBtn) {
+        profileDropdown.classList.remove('show');
+        profileBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Event listeners
+    uploadBtn.addEventListener('click', uploadFiles);
+    clearBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      uploadResult.style.display = 'none';
+      uploadStatus.style.display = 'none';
+      progressBar.style.display = 'none';
+      progressFill.style.width = '0%';
+    });
+    refreshLibrary.addEventListener('click', loadLibrary);
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'u') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    // Initialize
+    loadLibrary();
+
+    // Expose for inline handlers
+    window.downloadFile = downloadFile;
+    window.deleteFile = deleteFile;
+  </script>
+</body>
+</html>

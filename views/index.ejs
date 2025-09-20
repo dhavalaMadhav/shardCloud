@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ShardCloud — Secure Decentralized Storage</title>
+  <style>
+    :root{
+      --bg:#ffffff; --ink:#0b1b3a; --muted:#5b6b8b;
+      --blue:#246bff; --blue-600:#1e52cc; --blue-100:#eaf2ff;
+      --violet:#8a5cff; --teal:#00c8b4; --pink:#f472b6; --amber:#f59e0b; --green:#17b26a;
+      --card:#ffffff; --border:#e9eefc; --glass:#f7faff80;
+      --shadow:0 8px 24px rgba(10,30,80,0.10);
+      --shadow-strong:0 14px 40px rgba(12,30,80,0.18);
+      --ring:0 0 0 3px rgba(36,107,255,0.18);
+      --radius:16px;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      --mono: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.6}
+
+    /* Header */
+    header{
+      position:fixed; top:0; left:0; right:0; z-index:40;
+      background:linear-gradient(180deg,#fff 0%,#fff 70%,rgba(255,255,255,0.7) 100%);
+      border-bottom:1px solid var(--border); backdrop-filter:saturate(1.2) blur(10px);
+      transition:background .25s ease, border-color .25s ease, box-shadow .25s ease;
+    }
+    .nav{max-width:1200px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px}
+    .logo{
+      width:36px; height:36px; display:grid; place-items:center; border-radius:10px;
+      background:radial-gradient(120% 120% at 0% 0%, #7aa5ff 0%, #246bff 55%, #1e52cc 100%); box-shadow:var(--shadow);
+      animation: pop 600ms ease 1;
+    }
+    @keyframes pop{0%{transform:scale(.9); opacity:.6}100%{transform:scale(1); opacity:1}}
+    .tag{font-size:12px; color:#3a67ff; background:#e9f0ff; padding:2px 8px; border-radius:999px; border:1px solid #d7e4ff}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .btn{
+      appearance:none; border:none; background:var(--blue); color:#fff; padding:10px 16px; border-radius:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); line-height:1;
+      transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover{background:var(--blue-600); transform:translateY(-1px)}
+    .btn.ghost{background:transparent; color:var(--blue); border:1px solid #d7e4ff}
+    .btn.light{background:#eaf2ff; color:#1e52cc; border:1px solid #d7e4ff}
+    .btn.neutral{background:#f5f8ff; color:#334155; border:1px solid #e3ebff}
+    .btn.sm{padding:6px 12px; font-size:12px; border-radius:10px}
+
+    /* Sections */
+    section{position:relative; overflow:hidden}
+    .hero{min-height:100vh; display:grid; align-items:center; padding:110px 18px 32px}
+    .container{max-width:1200px; margin:0 auto; width:100%; padding:0 0}
+
+    /* Color flows */
+    .colorflow{
+      position:absolute; inset:-20%; z-index:-1;
+      background: radial-gradient(60% 60% at 15% 20%, rgba(36,107,255,0.22), transparent 60%),
+                  radial-gradient(70% 70% at 85% 30%, rgba(136,56,255,0.18), transparent 60%),
+                  radial-gradient(65% 65% at 40% 85%, rgba(0,200,180,0.16), transparent 60%),
+                  linear-gradient(135deg, #f6f9ff, #ffffff 40%, #eef3ff);
+      filter: blur(18px) saturate(1.1);
+      animation: drift 22s ease-in-out infinite alternate;
+    }
+    @keyframes drift{0%{transform:scale(1.05) translate(0,0)}50%{transform:scale(1.12) translate(-2%, 1%)}100%{transform:scale(1.08) translate(2%, -1%)}}
+
+    /* Hero content */
+    .hero-grid{display:grid; grid-template-columns:1.05fr 1fr; gap:36px; align-items:center}
+    @media (max-width:1000px){ .hero-grid{grid-template-columns:1fr} }
+    .title{font-size:clamp(40px, 6vw, 64px); line-height:1.05; margin:0 0 12px; letter-spacing:-.3px}
+    .title .hl{background:linear-gradient(135deg,#246bff,#8a5cff,#00c8b4); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+    .sub{color:var(--muted); font-size:clamp(16px,2vw,20px); margin:0 0 18px; max-width:55ch}
+    .cta{display:flex; gap:10px; flex-wrap:wrap}
+
+    /* Visual cards */
+    .visual{position:relative; height:min(560px,72vh)}
+    .float-card{
+      position:absolute; background:linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.75));
+      border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow-strong);
+      padding:14px; color:var(--ink); backdrop-filter:saturate(1.2) blur(6px);
+      animation: bob 6.5s ease-in-out infinite; transition:transform .25s ease, box-shadow .25s ease;
+    }
+    .float-card:hover{transform:translateY(-4px) scale(1.02); box-shadow:0 18px 52px rgba(12,30,80,0.22)}
+    .fc-1{top:0; left:0; width:300px; animation-delay:0s}
+    .fc-2{top:120px; right:0; width:260px; animation-delay:.8s}
+    .fc-3{bottom:90px; left:40px; width:240px; animation-delay:1.6s}
+    .fc-4{bottom:0; right:20px; width:200px; height:130px; animation-delay:.4s}
+    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .card-head{display:flex; align-items:center; gap:10px; margin:0 0 8px}
+    .iconbox{width:34px; height:34px; border-radius:8px; display:grid; place-items:center; color:#fff; background:linear-gradient(135deg,#246bff,#1e52cc)}
+    .card-title{font-weight:700; font-size:14px}
+    .progress{width:100%; height:6px; background:#eaf0ff; border-radius:4px; overflow:hidden}
+    .progress > span{display:block; height:100%; width:65%; background:linear-gradient(90deg,#7aa5ff,#246bff)}
+
+    /* Generic sections */
+    .section{padding:68px 18px}
+    .section .container{max-width:1200px}
+    .section-title{font-size:32px; text-align:center; margin:0 0 10px}
+    .section-sub{color:var(--muted); text-align:center; max-width:68ch; margin:0 auto 18px}
+
+    .features{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:18px}
+    .feature{background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); padding:18px; transition:transform .2s ease, box-shadow .2s ease}
+    .feature:hover{transform:translateY(-6px); box-shadow:0 14px 40px rgba(12,30,80,0.16)}
+    .f-icon{width:38px; height:38px; border-radius:10px; display:grid; place-items:center; color:#fff; margin-bottom:10px; background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+    .feature h3{margin:0 0 8px; font-size:18px}
+    .feature p{margin:0; color:var(--muted)}
+
+    .split{display:grid; grid-template-columns:1.1fr 1fr; gap:24px; align-items:center; margin-top:20px}
+    @media (max-width:1000px){ .split{grid-template-columns:1fr} }
+    .check{display:flex; align-items:center; gap:10px; color:var(--ink); margin:0 0 12px; font-weight:600}
+    .check .dot{width:22px; height:22px; border-radius:50%; display:grid; place-items:center; color:#fff; background:linear-gradient(135deg,#10b981,#059669)}
+    .stats{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+    .stat{background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid rgba(6,182,212,0.22); border-radius:16px; padding:18px; text-align:center; box-shadow:0 6px 20px rgba(6,182,212,0.08)}
+    .num{font-size:28px; font-weight:800; background:linear-gradient(135deg,#0ea5e9,#0284c7); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:6px}
+    .lbl{font-weight:700; color:#0b1b3a; font-size:13px}
+
+    .steps{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:20px; position:relative}
+    @media (max-width:900px){ .steps{grid-template-columns:repeat(2,1fr)} .line{display:none} }
+    @media (max-width:600px){ .steps{grid-template-columns:1fr} }
+    .line{position:absolute; top:30px; left:12.5%; right:12.5%; height:3px; background:linear-gradient(90deg,#6366f1,#8b5cf6,#f472b6,#f59e0b); border-radius:2px}
+    .step{background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; text-align:center; box-shadow:var(--shadow)}
+    .bubble{width:56px; height:56px; border-radius:50%; margin:0 auto 10px; display:grid; place-items:center; color:#fff; font-weight:800; font-size:18px; border:4px solid #fff; box-shadow:0 6px 20px rgba(99,102,241,0.25)}
+    .s1{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+    .s2{background:linear-gradient(135deg,#8b5cf6,#f472b6)}
+    .s3{background:linear-gradient(135deg,#f472b6,#f59e0b)}
+    .s4{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+    .step h3{margin:6px 0 6px; font-size:16px}
+    .step p{margin:0; color:#5b6b8b; font-size:14px}
+
+    .demo{background:linear-gradient(135deg,#f8fbff,#f3f7ff)}
+    .demo-cta{display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:14px}
+
+    .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease}
+    .reveal.active{opacity:1; transform:translateY(0)}
+
+    footer{padding:26px 18px; border-top:1px solid var(--border); background:#fff; color:#5b6b8b; text-align:center}
+
+    /* Modals */
+    .modal-backdrop{position:fixed; inset:0; background:rgba(10,20,40,0.55); display:none; align-items:center; justify-content:center; z-index:60}
+    .modal{
+      width:min(520px,92vw); background:#fff; border:1px solid #e0e8ff; border-radius:16px; box-shadow:var(--shadow-strong); padding:16px;
+      animation: rise .2s ease-out;
+    }
+    @keyframes rise{from{transform:translateY(6px); opacity:.96}to{transform:translateY(0); opacity:1}}
+    .row.spread{display:flex; align-items:center; justify-content:space-between}
+    .help{font-size:13px; color:#5b6b8b; margin-top:6px}
+    .error{color:#991b1b; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:8px; font-size:13px; margin-top:10px; display:none}
+    .success{color:#065f46; background:#ecfdf5; border:1px solid #d1fae5; border-radius:10px; padding:8px; font-size:13px; margin-top:10px; display:none}
+    .center{display:flex; justify-content:center; gap:10px}
+    .link{background:none; border:none; color:var(--blue); cursor:pointer; padding:0; font-size:14px}
+    .or{display:flex; align-items:center; gap:8px; color:#64748b; margin:12px 0}
+    .or::before, .or::after{content:""; height:1px; background:#e2e8f0; flex:1}
+
+    /* Floating field */
+    .field{position:relative; margin-top:12px}
+    .field input{
+      width:100%; padding:12px 12px 12px 42px; border:1px solid #dfe7fb; border-radius:12px; outline:none; font-size:14px; background:#fff;
+      transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    .field input:focus{border-color:#cfe0ff; box-shadow:var(--ring)}
+    .field label{
+      position:absolute; left:40px; top:50%; transform:translateY(-50%); color:#6b7280; font-size:14px; pointer-events:none; background:#fff; padding:0 6px; transition:transform .16s ease, color .16s ease, font-size .16s ease, top .16s ease;
+    }
+    .field input:focus + label,
+    .field input:not(:placeholder-shown) + label{
+      top:-8px; transform:none; font-size:12px; color:#1e40af;
+    }
+    .field input::placeholder{color:transparent}
+    .field .icon{
+      position:absolute; left:12px; top:50%; transform:translateY(-50%); width:18px; height:18px; color:#64748b; pointer-events:none;
+    }
+    .field input:focus ~ .icon{color:#1e52cc}
+
+    .inline-actions{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px}
+    .inline-actions .remember{display:flex; align-items:center; gap:8px; font-size:14px}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header id="hdr">
+    <nav class="nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="white" opacity=".35"/>
+            <path d="M12 5.2l6 3.4v6.8l-6 3.4-6-3.4V8.6l6-3.4z" fill="white"/>
+          </svg>
+        </div>
+        <span>ShardCloud</span>
+        <span class="tag">Intro</span>
+      </div>
+      <div class="row">
+        <button id="btnLogin" class="btn light" onclick="location.href='/login'">Login</button>
+        <button id="btnSignup" class="btn" onclick="location.href='signin'">Sign Up</button>
+        <button id="btnGoApp" class="btn ghost" disabled>Go to app</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="colorflow"></div>
+    <div class="container hero-grid reveal">
+      <div>
+        <h1 class="title">The fastest <span class="hl">decentralized cloud</span> made clear</h1>
+        <p class="sub">Clean, configurable storage with a separate client page for uploads, library, and downloads — access to file management unlocks after Login or Sign up.</p>
+        <div class="cta">
+          <button id="ctaLogin" class="btn">Login</button>
+          <button id="ctaSignup" class="btn ghost">Sign up</button>
+        </div>
+      </div>
+
+      <div class="visual" id="visual">
+        <div class="float-card fc-1">
+          <div class="card-head">
+            <div class="iconbox">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 16 0" stroke="white" stroke-width="2"/></svg>
+            </div>
+            <div class="card-title">Geographic Distribution</div>
+          </div>
+          <div style="font-size:12px; color:#3a4b74">Data mirrored across <b>12 nodes</b> in <b>8 regions</b> for resilience and speed.</div>
+        </div>
+
+        <div class="float-card fc-2">
+          <div class="card-head">
+            <div class="iconbox" style="background:linear-gradient(135deg,#00c8b4,#246bff)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7h6l2 2h8v8a2 2 0 0 1-2 2H4z" stroke="white" stroke-width="2"/></svg>
+            </div>
+            <div class="card-title">Recent Files</div>
+          </div>
+          <div style="font-size:12px; color:#3a4b74">📹 video_tutorial.mp4<br/>📄 project_docs.pdf</div>
+        </div>
+
+        <div class="float-card fc-3">
+          <div class="card-head">
+            <div class="iconbox" style="background:linear-gradient(135deg,#8a5cff,#246bff)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 10v8h10v-8" stroke="white" stroke-width="2"/><path d="M12 6v10" stroke="white" stroke-width="2"/></svg>
+            </div>
+            <div class="card-title">Downloading</div>
+          </div>
+          <div style="font-size:12px; color:#0b1b3a; margin-bottom:6px">film-trailer.mp4</div>
+          <div class="progress"><span></span></div>
+        </div>
+
+        <div class="float-card fc-4">
+          <div style="width:100%; height:78px; border-radius:10px; background:linear-gradient(135deg,#e3eeff,#d8e0ff); display:grid; place-items:center; color:#1b2b56">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="6" width="16" height="12" rx="2" stroke="#1b2b56" stroke-width="2"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="container reveal">
+      <h2 class="section-title">Why choose decentralized storage?</h2>
+      <p class="section-sub">Experience modern, resilient storage with a transparent, UI‑first workflow.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="f-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Enhanced security</h3>
+          <p>Files can be encrypted and split across nodes, reducing single‑point risk.</p>
+        </div>
+        <div class="feature">
+          <div class="f-icon" style="background:linear-gradient(135deg,#10b981,#059669)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Cost efficiency</h3>
+          <p>Pay for what is needed while scaling capacity without heavy overhead.</p>
+        </div>
+        <div class="feature">
+          <div class="f-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6h12v12H6z" stroke="white" stroke-width="2"/></svg>
+          </div>
+          <h3>Data ownership</h3>
+          <p>Keep full control over assets with a clean separation of UI and API.</p>
+        </div>
+        <div class="feature">
+          <div class="f-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2 6 4-12 2 6h4" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3>High availability</h3>
+          <p>Distribute pieces to maintain uptime and fast local retrieval.</p>
+        </div>
+        <div class="feature">
+          <div class="f-icon" style="background:linear-gradient(135deg,#a78bfa,#6366f1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 20h16M8 16V4m8 12V8" stroke="white" stroke-width="2"/></svg>
+          </div>
+          <h3>Scalability</h3>
+          <p>Grow capacity seamlessly; point the UI to any available API host.</p>
+        </div>
+        <div class="feature">
+          <div class="f-icon" style="background:linear-gradient(135deg,#111827,#374151)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="white" stroke-width="2"/></svg>
+          </div>
+          <h3>Privacy‑minded</h3>
+          <p>Use client‑side controls and clear endpoints for a transparent flow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits + Stats -->
+  <section id="benefits" class="section">
+    <div class="container reveal">
+      <h2 class="section-title">Benefits that matter</h2>
+      <p class="section-sub">Designed for clarity, performance, and reliable access across environments.</p>
+      <div class="split">
+        <div>
+          <div class="check"><span class="dot">✓</span><span>No single point of failure with distributed pieces.</span></div>
+          <div class="check"><span class="dot">✓</span><span>Immutable metadata patterns and audit‑friendly flows.</span></div>
+          <div class="check"><span class="dot">✓</span><span>Local‑first performance with global reach options.</span></div>
+          <div class="check"><span class="dot">✓</span><span>Automatic redundancy and simple restores.</span></div>
+          <div class="check"><span class="dot">✓</span><span>Clear separation of intro vs. client pages.</span></div>
+          <div class="check"><span class="dot">✓</span><span>Lean resource usage and scalable rollout.</span></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="num">90%</span><div class="lbl">Cost reduction</div></div>
+          <div class="stat"><span class="num">99.9%</span><div class="lbl">Uptime target</div></div>
+          <div class="stat"><span class="num">AES‑256</span><div class="lbl">Encryption option</div></div>
+          <div class="stat"><span class="num">24/7</span><div class="lbl">Access window</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works" class="section">
+    <div class="container reveal">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-sub">Authenticate here, then enter the client page to manage files against the storage API.</p>
+      <div class="steps">
+        <div class="line"></div>
+        <div class="step"><div class="bubble s1">1</div><h3>Sign up or login</h3><p>Identity step unlocks app access for file operations.</p></div>
+        <div class="step"><div class="bubble s2">2</div><h3>Open client page</h3><p>“Go to app” appears once authenticated, then proceed.</p></div>
+        <div class="step"><div class="bubble s3">3</div><h3>Upload files</h3><p>Use the client UI to send files to the API server.</p></div>
+        <div class="step"><div class="bubble s4">4</div><h3>Retrieve anytime</h3><p>List and download from the library when needed.</p></div>
+      </div>
+      <div class="row" style="justify-content:center; margin-top:16px">
+        <button id="enterApp" class="btn" disabled>Go to app</button>
+        <span id="gateHint" class="tag">Login required</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo CTA -->
+  <section id="demo" class="section demo">
+    <div class="container reveal" style="text-align:center">
+      <h2 class="section-title">Try the experience</h2>
+      <p class="section-sub">Explore user and provider dashboards in demo mode — no auth required.</p>
+      <div class="demo-cta">
+        <a href="/user-dashboard" class="btn" style="background:linear-gradient(135deg,#246bff,#1e52cc); box-shadow:0 6px 22px rgba(36,107,255,0.28)">User Dashboard Demo</a>
+        <a href="/provider-dashboard" class="btn" style="background:linear-gradient(135deg,#10b981,#059669); box-shadow:0 6px 22px rgba(16,185,129,0.28)">Provider Dashboard Demo</a>
+      </div>
+      <p style="color:#5b6b8b; margin-top:12px; font-size:13px;">No authentication required — browse freely.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container" style="text-align:center">
+      <p style="margin:0">&copy; 2025 ShardCloud. Secure. Decentralized. Yours.</p>
+    </div>
+  </footer>
+
+  <!-- Login Modal (POST /login) -->
+  <div id="modalLogin" class="modal-backdrop" role="dialog" aria-labelledby="loginTitle" aria-modal="true">
+    <div class="modal">
+      <div class="row spread" style="margin-bottom:6px">
+        <h3 id="loginTitle" style="margin:6px 0; display:flex; gap:8px; align-items:center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" stroke="#1e52cc" stroke-width="1.5"/></svg>
+          Sign in
+        </h3>
+        <button class="btn ghost sm" type="button" onclick="closeModal('modalLogin')" aria-label="Close sign in">Close</button>
+      </div>
+
+      <form action="/login" method="POST" autocomplete="on">
+        <div class="field">
+          <input id="loginEmail" name="email" type="email" inputmode="email" autocomplete="username" placeholder=" " required>
+          <label for="loginEmail">Email</label>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6"/></svg>
+        </div>
+
+        <div class="field">
+          <input id="loginPass" name="password" type="password" autocomplete="current-password" placeholder=" " required>
+          <label for="loginPass">Password</label>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="8" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
+        </div>
+
+        <div class="inline-actions">
+          <label class="remember"><input id="rememberMe" type="checkbox"> Remember this device</label>
+          <button type="button" class="link" id="lnkForgot">Forgot password?</button>
+        </div>
+
+        <div id="loginError" class="error" role="alert" aria-live="polite"></div>
+
+        <div class="row" style="margin-top:12px">
+          <button type="submit" class="btn">Sign in</button>
+          <button type="button" class="btn neutral" id="loginWithGoogle">Sign in with Google</button>
+        </div>
+
+        <div class="center" style="margin-top:10px">
+          <span class="muted">Don’t have an account?</span>
+          <button type="button" class="link" id="switchToSignup">Create one</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Signup Modal (POST /register, no confirm password) -->
+  <div id="modalSignup" class="modal-backdrop" role="dialog" aria-labelledby="signupTitle" aria-modal="true">
+    <div class="modal">
+      <div class="row spread" style="margin-bottom:6px">
+        <h3 id="signupTitle" style="margin:6px 0; display:flex; gap:8px; align-items:center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke="#1e52cc" stroke-width="1.5"/></svg>
+          Create your account
+        </h3>
+        <button class="btn ghost sm" type="button" onclick="closeModal('modalSignup')" aria-label="Close sign up">Close</button>
+      </div>
+
+      <form action="/register" method="POST" autocomplete="on">
+        <div class="field">
+          <input id="signupName" name="name" type="text" autocomplete="name" placeholder=" " required>
+          <label for="signupName">Full name</label>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M5 19a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.6"/></svg>
+        </div>
+
+        <div class="field">
+          <input id="signupEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder=" " required>
+          <label for="signupEmail">Email</label>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6"/></svg>
+        </div>
+        <div class="help">A verification link may be sent to this email.</div>
+
+        <div class="field">
+          <input id="signupPass" name="password" type="password" autocomplete="new-password" placeholder=" " required>
+          <label for="signupPass">Password</label>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="8" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
+        </div>
+        <div class="help">Use a strong password (8+ characters recommended).</div>
+
+        <div id="signupError" class="error" role="alert" aria-live="polite"></div>
+        <div id="signupSuccess" class="success" role="status" aria-live="polite">Account created successfully.</div>
+
+        <div class="row" style="margin-top:12px">
+          <button type="submit" class="btn">Create account</button>
+          <button type="button" class="btn neutral" id="signupWithGoogle">Sign up with Google</button>
+        </div>
+
+        <div class="center" style="margin-top:10px">
+          <span class="muted">Already have an account?</span>
+          <button type="button" class="link" id="switchToLogin">Sign in</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal (UI placeholder) -->
+  <div id="modalForgot" class="modal-backdrop" role="dialog" aria-labelledby="forgotTitle" aria-modal="true">
+    <div class="modal">
+      <div class="row spread" style="margin-bottom:6px">
+        <h3 id="forgotTitle" style="margin:6px 0; display:flex; gap:8px; align-items:center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 9-7 9s-7-4-7-9a7 7 0 0 1 7-7z" stroke="#1e52cc" stroke-width="1.5"/><circle cx="12" cy="9" r="2" stroke="#1e52cc" stroke-width="1.5"/></svg>
+          Reset password
+        </h3>
+        <button class="btn ghost sm" type="button" onclick="closeModal('modalForgot')" aria-label="Close reset">Close</button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); alert('Reset link sent (demo)'); closeModal('modalForgot'); openModal('modalLogin');">
+        <div class="field">
+          <input id="forgotEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder=" " required>
+          <label for="forgotEmail">Email</label>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6"/></svg>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button type="submit" class="btn">Send reset link</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button type="button" class="link" id="backToLogin">Back to sign in</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* Smooth scroll */
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', e=>{
+        const id = a.getAttribute('href'); if(id.length>1){ e.preventDefault(); const t = document.querySelector(id); if(t) t.scrollIntoView({behavior:'smooth', block:'start'}); }
+      });
+    });
+
+    /* Header style on scroll */
+    const hdr = document.getElementById('hdr');
+    window.addEventListener('scroll', ()=>{
+      const opaque = window.scrollY > 100;
+      hdr.style.background = opaque ? 'linear-gradient(180deg,#fff 0%, #fff 100%)' : 'linear-gradient(180deg,#fff 0%,#fff 70%,rgba(255,255,255,0.7) 100%)';
+      hdr.style.boxShadow = opaque ? '0 6px 18px rgba(12,30,80,0.08)' : 'none';
+    });
+
+    /* Reveal on scroll */
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('active'); } });
+    },{threshold:.12, rootMargin:'0px 0px -60px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=> io.observe(el));
+
+    /* Open/close modals */
+    function openModal(id){ const m = document.getElementById(id); if(m) m.style.display='flex'; }
+    function closeModal(id){ const m = document.getElementById(id); if(m) m.style.display='none'; }
+
+    // Triggers
+    // [['btnLogin','modalLogin'],['btnSignup','modalSignup'],['ctaLogin','modalLogin'],['ctaSignup','modalSignup']]
+    //   .forEach(([b,m]) => document.getElementById(b)?.addEventListener('click', ()=> openModal(m)));
+
+    document.getElementById('switchToSignup')?.addEventListener('click', ()=> { closeModal('modalLogin'); openModal('modalSignup'); });
+    document.getElementById('switchToLogin')?.addEventListener('click', ()=> { closeModal('modalSignup'); openModal('modalLogin'); });
+    document.getElementById('lnkForgot')?.addEventListener('click', ()=> { closeModal('modalLogin'); openModal('modalForgot'); });
+    document.getElementById('backToLogin')?.addEventListener('click', ()=> { closeModal('modalForgot'); openModal('modalLogin'); });
+
+    // Google placeholders (wire with GIS later)
+    document.getElementById('loginWithGoogle')?.addEventListener('click', ()=> alert('Sign in with Google (demo)'));
+    document.getElementById('signupWithGoogle')?.addEventListener('click', ()=> alert('Sign up with Google (demo)'));
+
+    // Optional parallax for hero
+    const visual = document.getElementById('visual');
+    if(visual){
+      visual.addEventListener('mousemove', (e)=>{
+        const r = visual.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width/2)) / r.width;
+        const dy = (e.clientY - (r.top + r.height/2)) / r.height;
+        visual.querySelectorAll('.float-card').forEach((el, i)=>{
+          const depth = (i+1)*3;
+          el.style.transform = `translate(${dx*depth*6}px, ${-dy*depth*6}px)`;
+        });
+      });
+      visual.addEventListener('mouseleave', ()=>{
+        visual.querySelectorAll('.float-card').forEach(el=> el.style.transform = '');
+      });
+    }
+  </script>
+</body>
+</html>

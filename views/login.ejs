@@ -1,0 +1,127 @@
+<!doctype html> <html lang="en"> <head> <meta charset="utf-8"/> <meta name="viewport" content="width=device-width, initial-scale=1"/> <title>Sign in — ShardCloud</title> <style> :root{ --bg:#ffffff; --ink:#0b1b3a; --muted:#5b6b8b; --blue:#246bff; --blue-600:#1e52cc; --red:#ef4444; --card:#ffffff; --border:#e9eefc; --shadow:0 8px 24px rgba(10,30,80,0.10); --ring:0 0 0 3px rgba(36,107,255,0.18); --radius:16px; --sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans"; } *{box-sizing:border-box} html,body{height:100%} body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); display:grid; place-items:center; padding:24px; } /* Ambient multicolor glow behind the card */ .glow{ position:fixed; inset:-10%; z-index:-1; filter:blur(22px) saturate(1.1); background: radial-gradient(60% 60% at 20% 20%, rgba(36,107,255,0.18), transparent 60%), radial-gradient(55% 55% at 80% 25%, rgba(138,92,255,0.16), transparent 60%), radial-gradient(50% 50% at 45% 80%, rgba(0,200,180,0.14), transparent 60%), linear-gradient(135deg,#f6f9ff,#ffffff 40%,#eef3ff); animation: drift 22s ease-in-out infinite alternate; } @keyframes drift{ 0%{transform:scale(1.04) translate(0,0)} 50%{transform:scale(1.10) translate(-1%, 1%)} 100%{transform:scale(1.06) translate(1%, -1%)} }
+.wrap{
+  width:min(560px, 92vw); margin-inline:auto;
+}
+.card{
+  width:100%; background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); box-shadow:0 20px 60px rgba(12,30,80,0.15);
+  padding:24px; position:relative;
+}
+/* Subtle inner gradient ring for “mixed color” feel */
+.card::before{
+  content:""; position:absolute; inset:-1px; z-index:-1; border-radius:calc(var(--radius) + 2px);
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(36,107,255,0.18), transparent 60%),
+    radial-gradient(120% 120% at 100% 10%, rgba(138,92,255,0.14), transparent 60%),
+    radial-gradient(120% 120% at 50% 100%, rgba(0,200,180,0.14), transparent 60%);
+  filter: blur(12px);
+}
+
+h1{
+  margin:0 0 6px; font-size:26px; text-align:center;
+  letter-spacing:.2px;
+}
+p.muted{margin:0 0 14px; color:var(--muted); font-size:14px; text-align:center}
+
+/* Floating label fields */
+.field{position:relative; margin-top:12px}
+.field input{
+  width:100%; padding:12px 12px 12px 44px; border:1px solid #dfe7fb; border-radius:12px; outline:none; font-size:14px; background:#fff;
+  transition:border-color .2s ease, box-shadow .2s ease, transform .16s ease;
+}
+.field input:focus{box-shadow:var(--ring); border-color:#cfe0ff; transform:translateY(-1px)}
+.field label{
+  position:absolute; left:44px; top:50%; transform:translateY(-50%); color:#6b7280; font-size:14px; pointer-events:none; background:#fff;
+  padding:0 6px; transition:transform .16s ease, color .16s ease, font-size .16s ease, top .16s ease;
+}
+/* Float label on focus or when not empty using :placeholder-shown */
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label{
+  top:-8px; transform:none; font-size:12px; color:#1e40af;
+}
+/* Keep placeholder invisible; label is the visible text */
+.field input::placeholder{color:transparent}
+
+/* Input icons */
+.field .icon{
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  width:18px; height:18px; color:#64748b; pointer-events:none;
+}
+.field input:focus ~ .icon{color:#1e52cc}
+
+.row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px}
+.help{font-size:13px; color:var(--muted); margin-top:6px}
+.error{color:#991b1b; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:8px; font-size:13px; margin-top:10px; display:none}
+
+/* Centered primary action with increased width */
+.actions{display:flex; justify-content:center; margin-top:14px}
+.btn{
+  appearance:none; border:none; background:var(--blue); color:#fff; padding:12px 18px; border-radius:12px; font-weight:700; cursor:pointer; box-shadow:var(--shadow);
+  min-width:220px; transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.btn:hover{background:var(--blue-600); transform:translateY(-1px)}
+.btn.ghost{background:#eef3ff; color:#1e52cc; border:1px solid #d7e4ff}
+.btn.google{
+  background:#fff; color:#1f2937; border:1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; gap:10px;
+  font-weight:600; padding:12px 18px; min-width:260px;
+}
+.btn.google:hover{background:#f9fafb}
+.google-row{display:flex; justify-content:center; margin-top:10px}
+
+.footer{display:flex; justify-content:center; margin-top:14px; font-size:14px}
+a{color:var(--blue); text-decoration:none}
+a:hover{text-decoration:underline}
+</style> </head> <body> <div class="glow"></div> <main class="wrap" aria-labelledby="signinTitle"> <div class="card"> <h1 id="signinTitle">Sign in</h1> <p class="muted">Access the dashboard and file manager</p>
+  <form id="signinForm" method="POST" action="/login" autocomplete="on" novalidate>
+    <div class="field">
+      <input id="email" name="email" type="email" inputmode="email" autocomplete="username" placeholder=" " required aria-describedby="emailHelp">
+      <label for="email">Email</label>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"></rect>
+        <path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="1.6"></path>
+      </svg>
+    </div>
+    <div id="emailHelp" class="help">Use the email registered with the account.</div>
+
+    <div class="field">
+      <input id="password" name="password" type="password" autocomplete="current-password" placeholder=" " required aria-describedby="pwdHelp">
+      <label for="password">Password</label>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="8" rx="2" stroke="currentColor" stroke-width="1.6"></rect>
+        <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.6"></path>
+      </svg>
+    </div>
+    <div id="pwdHelp" class="help">Password is case sensitive.</div>
+
+    <div class="row" style="margin-top:10px">
+      <label style="display:flex; align-items:center; gap:8px; font-size:14px">
+        <input id="remember" name="remember" type="checkbox"> Remember this device
+      </label>
+      <a href="/forgot" class="help">Forgot password?</a>
+    </div>
+
+    <div id="formError" class="error" role="alert" aria-live="polite"></div>
+
+    <div class="actions">
+      <button type="submit" class="btn">Sign in</button>
+    </div>
+
+    <div class="google-row">
+      <button type="button" class="btn google" id="signinGoogle">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.72 1.22 9.23 3.6l6.9-6.9C35.9 2.6 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.23l8.05 6.25C12.3 13.34 17.67 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.5 24.5c0-1.59-.14-3.12-.41-4.59H24v9.18h12.65c-.55 2.97-2.21 5.48-4.7 7.18l7.18 5.57C43.92 38.04 46.5 31.8 46.5 24.5z"/>
+          <path fill="#FBBC05" d="M10.61 27.48A14.49 14.49 0 0 1 10 24c0-1.21.17-2.39.47-3.52l-8.05-6.25A23.89 23.89 0 0 0 0 24c0 3.87.93 7.51 2.56 10.77l8.05-6.25z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.79l-7.18-5.57C30.7 38.57 27.6 39.5 24 39.5c-6.33 0-11.7-3.84-13.39-9.48l-8.05 6.25C6.51 42.62 14.62 48 24 48z"/>
+          <path fill="none" d="M0 0h48v48H0z"/>
+        </svg>
+        Sign in with Google
+      </button>
+    </div>
+  </form>
+
+  <div class="footer">
+    <span>New here? <a href="/signin">Create an account</a></span>
+  </div>
+</div>
+</main> <script> // Optional JS hooks const form = document.getElementById('signinForm'); const formError = document.getElementById('formError'); // Basic client-side validation example (kept minimal) form.addEventListener('submit', (e) => { formError.style.display = 'none'; const email = document.getElementById('email').value.trim(); const pwd = document.getElementById('password').value.trim(); if(!email || !pwd){ e.preventDefault(); formError.textContent = 'Please enter email and password.'; formError.style.display = 'block'; } }); // Demo Google button document.getElementById('signinGoogle').addEventListener('click', () => { alert('Sign in with Google (demo) — integrate Google Identity Services here.'); }); </script> </body> </html>
