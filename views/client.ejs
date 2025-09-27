@@ -3,219 +3,1028 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>ShardCloud Client — File Manager</title>
+  <title>ShardCloud — Distributed Storage Network</title>
   <style>
-    :root{
-      --bg:#ffffff; --ink:#0b1b3a; --muted:#5b6b8b;
-      --blue:#246bff; --blue-600:#1e52cc;
-      --green:#17b26a; --red:#ef4444; --amber:#f59e0b;
-      --card:#ffffff; --shadow:0 8px 24px rgba(10,30,80,0.10);
-      --ring:0 0 0 3px rgba(36,107,255,0.18);
-      --radius:16px;
-      --sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-      --mono: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #3b82f6;
+      --secondary: #64748b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --background: #fafbfc;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      
+      --radius-sm: 4px;
+      --radius: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans)}
-    a{color:var(--blue); text-decoration:none}
-    a:hover{text-decoration:underline}
 
-    /* Header */
-    header{
-      position:sticky; top:0; z-index:30;
-      background:linear-gradient(180deg,#fff 0%,#fff 70%,rgba(255,255,255,0.65) 100%);
-      border-bottom:1px solid #e9eefc; backdrop-filter:saturate(1.2) blur(6px);
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    .container{max-width:1100px; margin:0 auto; padding:18px}
-    .nav{display:flex; align-items:center; justify-content:space-between; gap:16px}
-    .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px}
-    .logo{
-      width:40px; height:40px; display:grid; place-items:center; border-radius:12px;
-      background:radial-gradient(120% 120% at 0% 0%, #7aa5ff 0%, #246bff 55%, #1e52cc 100%); box-shadow:var(--shadow);
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .tag{font-size:12px; color:#3a67ff; background:#e9f0ff; padding:4px 8px; border-radius:999px; border:1px solid #d7e4ff}
-    .pill{display:inline-flex; align-items:center; gap:10px; padding:8px 10px; background:#f5f8ff; border:1px solid #e3ebff; border-radius:999px; font-size:13px; color:#3a4b74}
-    .kbd{font-family:var(--mono); background:#f4f7ff; border:1px solid #e0e8ff; padding:2px 6px; border-radius:8px; font-size:12px}
-    .btn{
-      appearance:none; border:none; background:var(--blue); color:#fff; padding:10px 16px; border-radius:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow);
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
     }
-    .btn:hover{background:var(--blue-600)}
-    .btn:disabled{opacity:0.5; cursor:not-allowed}
-    .btn.ghost{background:transparent; color:var(--blue); border:1px solid #d7e4ff}
-    .btn.ghost:hover{background:#f8faff}
-    .btn.danger{background:var(--red); border-color:var(--red)}
-    .btn.danger:hover{background:#dc2626}
-    .btn.sm{padding:6px 12px; font-size:12px; border-radius:10px}
 
-    /* Layout */
-    main{padding:20px 18px}
-    .grid{display:grid; gap:18px; margin-top:18px}
-    .grid-2{grid-template-columns:1fr 1fr}
-    @media (max-width:900px){ .grid-2{grid-template-columns:1fr} }
-    .card{background:var(--card); border:1px solid #e9eefc; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
-    .card h3{margin:0 0 8px; font-size:18px}
-    .muted{color:var(--muted)}
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-
-    /* Upload section */
-    input[type="file"]{width:100%; padding:10px 12px; border:1px solid #dfe7fb; border-radius:12px; outline:none}
-    input[type="text"], input[type="url"]{width:100%; padding:10px 12px; border:1px solid #dfe7fb; border-radius:12px; outline:none}
-    input:focus{box-shadow:var(--ring); border-color:#cfe0ff}
-    .progress-bar{width:100%; height:8px; background:#f1f5f9; border-radius:4px; overflow:hidden; margin:8px 0}
-    .progress-fill{height:100%; background:linear-gradient(90deg,#7aa5ff,#246bff); border-radius:4px; width:0%; transition:width .2s ease}
-    .status{margin-top:8px; padding:8px 12px; border-radius:8px; font-size:13px}
-    .status.success{background:#ecfdf5; color:#065f46; border:1px solid #d1fae5}
-    .status.error{background:#fef2f2; color:#991b1b; border:1px solid #fecaca}
-    .status.info{background:#eff6ff; color:#1e40af; border:1px solid #dbeafe}
-
-    /* Library table */
-    .table-container{overflow-x:auto; margin-top:12px}
-    table{width:100%; border-collapse:collapse}
-    th, td{text-align:left; padding:12px 8px; border-bottom:1px solid #f1f5f9}
-    th{font-weight:600; color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.5px}
-    tbody tr:hover{background:#f8faff}
-    .btn-sm{padding:6px 12px; font-size:12px}
-
-    /* Profile dropdown */
-    .profile-container{position:relative; margin-left:10px}
-    .profile-dropdown{
-      position:absolute; top:44px; right:0; background:#fff; border:1px solid #c7d8ff;
-      border-radius:12px; box-shadow:0 6px 20px rgba(12,30,80,0.12); min-width:180px; display:none; flex-direction:column; z-index:100;
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .profile-dropdown.show{display:flex}
-    .profile-item{padding:10px 16px; font-size:14px; color:#334155; text-align:left; background:transparent; border:none; cursor:pointer; width:100%; text-decoration:none}
-    .profile-item:hover,.profile-item:focus{background:#eaf2ff; outline:none; color:#1e40af}
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem;
+      border-radius: var(--radius-md);
+      backdrop-filter: blur(10px);
+      color: white;
+    }
+
+    .brand-text h1 {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(10px);
+      color: white;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      min-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: var(--transition);
+      z-index: 1000;
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: 0.75rem 1rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border-light);
+      transition: var(--transition);
+    }
+
+    .dropdown-item:hover {
+      background: var(--surface-2);
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .content-section {
+      margin-bottom: 2rem;
+    }
+
+    .stats-container {
+      margin-bottom: 2rem;
+    }
+
+    .stats-strip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex: 1;
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-number {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .separator {
+      width: 1px;
+      height: 60px;
+      background: var(--border);
+    }
+
+    .grid {
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 1fr;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--surface-2);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .card-description {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      background: var(--surface-2);
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary-light);
+      background: var(--surface);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    .upload-area input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-icon {
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .upload-text h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-text p {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .file-types {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .progress-container {
+      margin-top: 1rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--border-light);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+      border-radius: var(--radius);
+      transition: width 0.3s ease;
+    }
+
+    .status {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .status.info {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+
+    .status.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .status.warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .upload-results {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-top: 1rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+      display: none;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.25rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: var(--error);
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th {
+      background: var(--surface-2);
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.9375rem;
+    }
+
+    .table tbody tr:hover {
+      background: var(--surface-2);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .file-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .status-badge.complete {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+    }
+
+    .status-badge.incomplete {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+    }
+
+    .loading {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top: 2px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .storage-status {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .node-indicators {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .node-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      border: 1px solid var(--border);
+    }
+
+    .node-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .node-status-dot.unhealthy {
+      background: var(--error);
+    }
+
+    .node-status-dot.unknown {
+      background: var(--warning);
+    }
+
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .stats-strip {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .separator {
+        width: 100%;
+        height: 1px;
+      }
+
+      .node-indicators {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+
+      .main {
+        padding: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <div class="container nav">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="white" opacity=".35"/>
-            <path d="M12 5.2l6 3.4v6.8l-6 3.4-6-3.4V8.6l6-3.4z" fill="white"/>
+  <header class="header">
+    <div class="header-container">
+      <div class="logo-section">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" fill="white"/>
+            <polyline points="7.5,4.21 12,6.81 16.5,4.21" stroke="rgba(255,255,255,0.5)"/>
+            <polyline points="7.5,19.79 7.5,14.6 3,12" stroke="rgba(255,255,255,0.5)"/>
+            <polyline points="21,12 16.5,14.6 16.5,19.79" stroke="rgba(255,255,255,0.5)"/>
           </svg>
         </div>
-        <span>ShardCloud Client</span>
-        <span class="tag">File Manager</span>
+        <div class="brand-text">
+          <h1>ShardCloud</h1>
+          <div class="subtitle">Multi-Node Distributed Storage</div>
+        </div>
       </div>
-      <div class="row">
-        <span class="pill">User: <span class="kbd"><%= name %></span></span>
-        <div class="profile-container">
-          <button id="profileBtn" class="btn ghost sm" aria-haspopup="true" aria-expanded="false" aria-label="User menu" type="button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="border-radius:50%; background:#dde6ff; padding:2px;">
-              <circle cx="12" cy="7" r="4" />
-              <path d="M5.5 21a7.5 7.5 0 0 1 13 0" />
+      
+      <div class="user-section">
+        <div class="user-info">
+          <div class="user-avatar"><%= name.charAt(0).toUpperCase() %></div>
+          <div>
+            <div style="font-weight: 500; font-size: 0.875rem;"><%= name %></div>
+            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.8);"><%= userEmail %></div>
+          </div>
+        </div>
+        
+        <div class="dropdown">
+          <button id="dropdownBtn" class="btn btn-secondary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
           </button>
-          <div id="profileDropdown" class="profile-dropdown" role="menu" aria-hidden="true" tabindex="-1">
-            <a href="/profile" role="menuitem" class="profile-item">Profile Info</a>
-            <a href="/logout" role="menuitem" class="profile-item">Logout</a>
+          <div id="dropdownMenu" class="dropdown-menu">
+            <a href="/debug/user" class="dropdown-item">Debug Info</a>
+            <a href="/storage/health" class="dropdown-item">Storage Health</a>
+            <a href="/storage/nearest" class="dropdown-item">Node Status</a>
+            <a href="/logout" class="dropdown-item">Sign Out</a>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="container">
-    <div class="grid">
-      <!-- Upload Section -->
+  <main class="main">
+    <section class="content-section">
+      <div class="storage-status">
+        <h3 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-primary);">Storage Network Status</h3>
+        <div class="node-indicators" id="nodeIndicators">
+          <div class="loading" style="margin-right: 1rem;"></div>
+          <span>Checking storage nodes...</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats-container">
+      <div class="stats-strip">
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+          </div>
+          <div class="stat-number" id="totalFiles" data-target="0">0</div>
+          <div class="stat-label">Files</div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </div>
+          <div class="stat-number" id="totalStorage" data-target="0">0</div>
+          <div class="stat-label">MB Used</div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </div>
+          <div class="stat-number" data-target="5">0</div>
+          <div class="stat-label">Chunks/File</div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+          <div class="stat-number" id="activeNodes" data-target="0">0</div>
+          <div class="stat-label">Active Nodes</div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="stat-item">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          </div>
+          <div class="stat-number" id="activeChunks" data-target="0">0</div>
+          <div class="stat-label">Total Chunks</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Upload Files</h2>
+            <p class="card-description">Files are automatically split into 5 chunks and stored on the nearest available node</p>
+          </div>
+          <div class="card-content">
+            <div class="upload-area" id="uploadArea">
+              <input type="file" id="fileInput" multiple accept="*/*">
+              <div class="upload-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17,8 12,3 7,8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <div class="upload-text">
+                <h3>Drop files here or click to browse</h3>
+                <p>Files will be automatically distributed to the optimal storage node</p>
+                <p class="file-types">Supports all file types • Maximum 5GB per file</p>
+              </div>
+            </div>
+
+            <div class="progress-container" id="progressContainer" style="display: none;">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div id="uploadStatus" class="status"></div>
+            <div id="uploadResults" class="upload-results"></div>
+
+            <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+              <button id="uploadBtn" class="btn btn-primary" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <path d="M12 15V3"/>
+                </svg>
+                Upload Files
+              </button>
+              <button id="clearBtn" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section">
       <div class="card">
-        <h3>Upload Files</h3>
-        <p class="muted">Select and upload files to your secure storage</p>
-        <div style="margin-top:12px">
-          <input type="file" id="fileInput" multiple/>
-          <div class="row" style="margin-top:10px">
-            <button id="uploadBtn" class="btn" type="button">Upload</button>
-            <button id="clearBtn" class="btn ghost" type="button">Clear</button>
+        <div class="card-header">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h2 class="card-title">File Library</h2>
+              <p class="card-description">Your distributed files across multiple storage nodes</p>
+            </div>
+            <button id="refreshBtn" class="btn btn-secondary btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23,4 23,10 17,10"/>
+                <polyline points="1,20 1,14 7,14"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
+              Refresh
+            </button>
           </div>
-          <div class="progress-bar" id="progressBar" style="display:none">
-            <div class="progress-fill" id="progressFill"></div>
-          </div>
-          <div id="uploadStatus" class="muted" style="margin-top:8px; font-size:13px"></div>
-          <div id="uploadResult" class="upload-result" style="display:none; white-space:pre-wrap;"></div>
+        </div>
+        <div class="table-container">
+          <table class="table" id="filesTable">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Size</th>
+                <th>Type</th>
+                <th>Storage Node</th>
+                <th>Status</th>
+                <th>Uploaded</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                  <div class="loading" style="margin: 0 auto 1rem;"></div>
+                  Loading your files...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
-
-    <!-- Library Section -->
-    <div class="card" style="margin-top:18px">
-      <div class="row" style="justify-content:space-between; align-items:center">
-        <div>
-          <h3 style="margin:0">Your Files</h3>
-          <p class="muted" style="margin:4px 0 0">Files stored and referenced in database</p>
-        </div>
-        <button id="refreshLibrary" class="btn ghost" type="button">Refresh</button>
-      </div>
-
-      <div class="table-container">
-        <table id="libraryTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Size</th>
-              <th>Type</th>
-              <th>Uploaded</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" class="muted" style="text-align:center; padding:20px">Loading files...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </section>
   </main>
 
-  <script>
-    // User ID injected from server-side rendering (EJS)
-    const USER_ID = "<%= userId %>"; // Server injects this
-    const API_BASE = 'http://localhost:3000'; // Storage server
+<script>
+// USER AND PLATFORM CONFIGURATION
+const USERID = '<%= userId %>';
+const USEREMAIL = '<%= userEmail %>';
+const PLATFORM_SERVER_URL = window.location.origin;
 
-    // DOM elements
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const progressBar = document.getElementById('progressBar');
-    const progressFill = document.getElementById('progressFill');
-    const uploadStatus = document.getElementById('uploadStatus');
-    const uploadResult = document.getElementById('uploadResult');
-    const refreshLibrary = document.getElementById('refreshLibrary');
-    const libraryTable = document.getElementById('libraryTable');
+// STORAGE NODES CONFIGURATION - Initialize with fallback values
+let STORAGE_NODES = [
+  {
+    id: 'node1',
+    url: 'http://192.168.35.137:3000',
+    name: 'Primary Storage Node',
+    priority: 1
+  },
+  {
+    id: 'node2',
+    url: 'http://192.168.35.140:3000', 
+    name: 'Secondary Storage Node',
+    priority: 2
+  }
+];
 
-    // Profile dropdown
-    const profileBtn = document.getElementById('profileBtn');
-    const profileDropdown = document.getElementById('profileDropdown');
+let SELECTED_NODE = null;
 
-    // Utils
-    function formatFileSize(bytes) {
-      if (bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+// TRY TO GET SERVER-PROVIDED STORAGE NODES DATA
+try {
+  // These will be populated by server if available
+  const serverStorageNodes = '<%- typeof storageNodes !== "undefined" && storageNodes ? JSON.stringify(storageNodes) : "null" %>';
+  const serverNearestNode = '<%- typeof nearestNode !== "undefined" && nearestNode ? JSON.stringify(nearestNode) : "null" %>';
+  
+  if (serverStorageNodes && serverStorageNodes !== 'null') {
+    STORAGE_NODES = JSON.parse(serverStorageNodes);
+  }
+  
+  if (serverNearestNode && serverNearestNode !== 'null') {
+    SELECTED_NODE = JSON.parse(serverNearestNode);
+  }
+} catch (error) {
+  console.warn('Could not parse server storage node data, using defaults:', error);
+}
+
+// DOM ELEMENTS
+const fileInput = document.getElementById('fileInput');
+const uploadArea = document.getElementById('uploadArea');
+const uploadBtn = document.getElementById('uploadBtn');
+const clearBtn = document.getElementById('clearBtn');
+const progressContainer = document.getElementById('progressContainer');
+const progressFill = document.getElementById('progressFill');
+const uploadStatus = document.getElementById('uploadStatus');
+const uploadResults = document.getElementById('uploadResults');
+const refreshBtn = document.getElementById('refreshBtn');
+const filesTable = document.getElementById('filesTable');
+const dropdownBtn = document.getElementById('dropdownBtn');
+const dropdownMenu = document.getElementById('dropdownMenu');
+const nodeIndicators = document.getElementById('nodeIndicators');
+
+// STATS ELEMENTS
+const totalFiles = document.getElementById('totalFiles');
+const totalStorage = document.getElementById('totalStorage');
+const activeChunks = document.getElementById('activeChunks');
+const activeNodes = document.getElementById('activeNodes');
+
+// INITIALIZATION LOG
+console.log('📡 ShardCloud Multi-Node Client Initialized');
+console.log('🏠 Platform Server:', PLATFORM_SERVER_URL);
+console.log('👤 User:', USEREMAIL, USERID);
+console.log('🔗 Available Storage Nodes:', STORAGE_NODES);
+console.log('🎯 Selected Node:', SELECTED_NODE);
+
+// UTILITY FUNCTIONS
+function animateValue(element, start, end, duration) {
+  const range = end - start;
+  const increment = range / (duration / 16);
+  let current = start;
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= end) {
+      current = end;
+      clearInterval(timer);
     }
-
-    function showStatus(message, type = 'info') {
-      uploadStatus.textContent = message;
-      uploadStatus.className = `status ${type}`;
-      uploadStatus.style.display = 'block';
+    if (element === totalStorage) {
+      element.textContent = current.toFixed(1);
+    } else {
+      element.textContent = Math.floor(current);
     }
+  }, 16);
+}
 
-    function escapeHtml(text) {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function showStatus(message, type = 'info') {
+  uploadStatus.textContent = message;
+  uploadStatus.className = `status ${type}`;
+  uploadStatus.style.display = 'block';
+}
+
+function hideStatus() {
+  uploadStatus.style.display = 'none';
+}
+
+function generateFileId() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => 
+    byte.toString(16).padStart(2, '0')).join('');
+}
+
+// NODE MANAGEMENT FUNCTIONS
+async function updateNodeStatus() {
+  try {
+    const response = await fetch(`${PLATFORM_SERVER_URL}/storage/health`, {
+      credentials: 'include'
+    });
+    
+    if (response.ok) {
+      const healthData = await response.json();
+      const healthyCount = healthData.healthyNodes || 0;
+      
+      if (activeNodes) {
+        animateValue(activeNodes, parseInt(activeNodes.textContent) || 0, healthyCount, 1000);
+      }
+      
+      nodeIndicators.innerHTML = healthData.nodes.map(node => `
+        <div class="node-indicator">
+          <div class="node-status-dot ${node.healthy ? '' : 'unhealthy'}"></div>
+          <span>${node.name}</span>
+          <span style="color: var(--text-muted); font-size: 0.75rem;">
+            ${node.healthy ? `${node.latency}ms` : 'Offline'}
+          </span>
+        </div>
+      `).join('');
+      
+    } else {
+      nodeIndicators.innerHTML = `
+        <div class="node-indicator">
+          <div class="node-status-dot unknown"></div>
+          <span>Unable to check node status</span>
+        </div>
+      `;
     }
+  } catch (error) {
+    console.error('Failed to update node status:', error);
+    nodeIndicators.innerHTML = `
+      <div class="node-indicator">
+        <div class="node-status-dot unknown"></div>
+        <span>Network error</span>
+      </div>
+    `;
+  }
+}
 
-    // Upload functionality
+async function getNearestNode() {
+  try {
+    const response = await fetch(`${PLATFORM_SERVER_URL}/storage/nearest`, {
+      credentials: 'include'
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      SELECTED_NODE = data.nearestNode;
+      console.log('🎯 Updated selected node:', SELECTED_NODE);
+      return SELECTED_NODE;
+    }
+  } catch (error) {
+    console.error('Failed to get nearest node:', error);
+  }
+  
+  return STORAGE_NODES[0] || null;
+}
+
+// STATS AND UI UPDATE FUNCTIONS
+function updateStats(files) {
+  const total = files.length;
+  const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
+  const chunks = files.reduce((sum, file) => sum + (file.chunks ? file.chunks.length : 0), 0);
+
+  totalFiles.dataset.target = total;
+  totalStorage.dataset.target = (totalSize / (1024 * 1024)).toFixed(1);
+  activeChunks.dataset.target = chunks;
+
+  animateValue(totalFiles, parseInt(totalFiles.textContent) || 0, total, 1000);
+  animateValue(totalStorage, parseFloat(totalStorage.textContent) || 0, totalSize / (1024 * 1024), 1000);
+  animateValue(activeChunks, parseInt(activeChunks.textContent) || 0, chunks, 1000);
+}
+
+function updateUploadButton() {
+  uploadBtn.disabled = fileInput.files.length === 0;
+  if (fileInput.files.length > 0) {
+    uploadBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7,10 12,15 17,10"></polyline>
+        <path d="M12 15V3"></path>
+      </svg>
+      Upload ${fileInput.files.length} File${fileInput.files.length > 1 ? 's' : ''}
+    `;
+  }
+}
+
+// UPLOAD FUNCTION
 async function uploadFiles() {
   const files = fileInput.files;
   if (!files || files.length === 0) {
@@ -223,9 +1032,26 @@ async function uploadFiles() {
     return;
   }
 
+  if (!USEREMAIL || USEREMAIL === 'undefined') {
+    showStatus('Error: User email not available. Please refresh the page.', 'error');
+    return;
+  }
+
+  console.log(`📤 Starting upload process for ${files.length} files`);
+
+  const targetNode = await getNearestNode();
+  if (!targetNode) {
+    showStatus('Error: No storage nodes available', 'error');
+    return;
+  }
+
+  console.log(`🎯 Using storage node: ${targetNode.name} (${targetNode.url})`);
+  showStatus(`📡 Using storage node: ${targetNode.name}`, 'info');
+
   uploadBtn.disabled = true;
-  progressBar.style.display = 'block';
-  uploadResult.style.display = 'none';
+  clearBtn.disabled = true;
+  progressContainer.style.display = 'block';
+  hideStatus();
 
   let completed = 0;
   const results = [];
@@ -233,202 +1059,355 @@ async function uploadFiles() {
 
   for (const file of files) {
     try {
-      console.log(`Processing file: ${file.name}, size: ${file.size}, type: ${file.type}`);
-      
-      // Step 1: Upload to storage API
-      const formData = new FormData();
-      formData.append('file', file);
+      console.log(`📁 Processing: ${file.name} (${formatFileSize(file.size)})`);
+      showStatus(`📤 Uploading ${file.name} to ${targetNode.name}...`, 'info');
 
-      const uploadResponse = await fetch(`${API_BASE}/upload`, {
-        method: 'POST',
-        body: formData
-      });
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
 
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(`Storage upload failed (${uploadResponse.status}): ${errorText}`);
+      const chunkSize = Math.ceil(buffer.length / 5);
+      const chunks = [];
+      for (let i = 0; i < 5; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, buffer.length);
+        chunks.push(buffer.slice(start, end));
       }
 
-      const uploadResult = await uploadResponse.json();
-      console.log(`Storage upload successful for ${file.name}:`, uploadResult);
+      const fileId = generateFileId();
 
-      // Step 2: Save metadata to database
-      const metadataPayload = {
-        fileId: uploadResult.fileId,
-        filename: file.name,
-        size: file.size,
-        mimeType: file.type,
-        path: uploadResult.path,
-        storageRoot: uploadResult.storageRoot || 'default',
-        hash: uploadResult.hash
-      };
+      console.log(`🔍 Testing connectivity to: ${targetNode.url}`);
+      
+      try {
+        const healthResponse = await fetch(`${targetNode.url}/health`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+        
+        if (!healthResponse.ok) {
+          throw new Error(`Storage node health check failed: ${healthResponse.status}`);
+        }
+        
+        console.log('✅ Storage node is reachable');
+      } catch (connectError) {
+        console.error('❌ Storage node connectivity test failed:', connectError);
+        throw new Error(`Cannot reach storage node ${targetNode.name}. Please try again.`);
+      }
 
-      console.log(`Saving metadata for ${file.name}:`, metadataPayload);
+      const chunkMetadata = [];
+      for (let i = 0; i < chunks.length; i++) {
+        console.log(`📦 Uploading chunk ${i + 1}/5 to ${targetNode.name}`);
+        
+        const formData = new FormData();
+        formData.append('chunk', new Blob([chunks[i]]));
+        formData.append('fileId', fileId);
+        formData.append('chunkIndex', i.toString());
+        formData.append('totalChunks', '5');
+        formData.append('userEmail', USEREMAIL);
+        formData.append('originalFilename', file.name);
 
-      const metadataResponse = await fetch('/files', {
+        try {
+          const response = await fetch(`${targetNode.url}/upload-chunk`, {
+            method: 'POST',
+            body: formData,
+            mode: 'cors'
+          });
+
+          console.log(`📡 Chunk ${i} response status:`, response.status);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Chunk ${i} upload failed (${response.status}): ${errorText}`);
+          }
+
+          const result = await response.json();
+          console.log(`✅ Chunk ${i} uploaded successfully:`, result);
+          
+          chunkMetadata.push({
+            index: i,
+            path: result.path,
+            size: result.size,
+            uploadedAt: new Date().toISOString()
+          });
+
+        } catch (chunkError) {
+          console.error(`❌ Chunk ${i} upload error:`, chunkError);
+          throw new Error(`Chunk ${i} failed: ${chunkError.message}`);
+        }
+      }
+
+      console.log(`💾 Saving metadata to platform database`);
+      const metadataResponse = await fetch(`${PLATFORM_SERVER_URL}/files`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(metadataPayload)
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          fileId,
+          filename: file.name,
+          size: file.size,
+          mimeType: file.type || 'application/octet-stream',
+          userEmail: USEREMAIL,
+          chunkCount: 5,
+          chunks: chunkMetadata
+        })
       });
 
       if (!metadataResponse.ok) {
         const errorData = await metadataResponse.json();
-        throw new Error(`Database save failed (${metadataResponse.status}): ${errorData.error || 'Unknown error'}`);
+        throw new Error(`Database save failed: ${errorData.error}`);
       }
 
-      const metadataResult = await metadataResponse.json();
-      console.log(`Metadata saved successfully for ${file.name}:`, metadataResult);
+      results.push(`✅ ${file.name}: Successfully uploaded to ${targetNode.name}`);
+      console.log(`🎉 File ${file.name} completely processed`);
 
-      results.push(`✓ ${file.name}: Uploaded and saved successfully`);
     } catch (error) {
-      console.error(`Error processing ${file.name}:`, error);
-      results.push(`✗ ${file.name}: ${error.message}`);
+      console.error(`❌ Error with ${file.name}:`, error);
+      results.push(`❌ ${file.name}: ${error.message}`);
       errors.push({ filename: file.name, error: error.message });
     }
 
     completed++;
     const percent = (completed / files.length) * 100;
     progressFill.style.width = `${percent}%`;
-    showStatus(`Processing ${completed}/${files.length} files...`, 'info');
+  }
+
+  uploadResults.textContent = results.join('\n');
+  uploadResults.style.display = 'block';
+
+  const successCount = results.filter(r => r.startsWith('✅')).length;
+  if (successCount === files.length) {
+    showStatus(`🎉 Successfully uploaded ${successCount} files to storage network!`, 'success');
+  } else if (successCount > 0) {
+    showStatus(`⚠️ ${successCount}/${files.length} files uploaded. ${errors.length} failed.`, 'warning');
+  } else {
+    showStatus(`❌ All uploads failed. Check storage network status.`, 'error');
   }
 
   uploadBtn.disabled = false;
-  progressBar.style.display = 'none';
-  uploadResult.textContent = results.join('\n');
-  uploadResult.style.display = 'block';
-  
-  // Show summary
-  const successCount = results.filter(r => r.startsWith('✓')).length;
-  if (successCount === files.length) {
-    showStatus(`All ${successCount} files uploaded successfully!`, 'success');
-  } else {
-    showStatus(`${successCount}/${files.length} files uploaded successfully. ${errors.length} failed.`, 'error');
-  }
-
-  // Log detailed errors for debugging
-  if (errors.length > 0) {
-    console.group('Upload Errors Details:');
-    errors.forEach(err => console.error(`${err.filename}:`, err.error));
-    console.groupEnd();
-  }
-
-  loadLibrary(); // Refresh library
+  clearBtn.disabled = false;
+  progressContainer.style.display = 'none';
+  loadFiles();
+  updateNodeStatus();
 }
 
-
-    // Load user's files from database (server uses populate() to get full info)
-    async function loadLibrary() {
-      try {
-        const response = await fetch(`/users/${USER_ID}/files`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const files = await response.json();
-        renderLibrary(files);
-      } catch (error) {
-        console.error('Library load error:', error);
-        renderLibrary([]);
-      }
+// FILE LOADING AND RENDERING FUNCTIONS
+async function loadFiles() {
+  try {
+    console.log('📋 Loading files from platform database');
+    showStatus('Loading files...', 'info');
+    
+    const response = await fetch(`${PLATFORM_SERVER_URL}/users/${USERID}/files`, {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load files: ${response.status}`);
     }
+    
+    const files = await response.json();
+    console.log(`📁 Loaded ${files.length} files from database`);
+    
+    hideStatus();
+    renderFiles(files);
+    updateStats(files);
+  } catch (error) {
+    console.error('❌ Error loading files:', error);
+    showStatus('Failed to load files. Please try again.', 'error');
+    
+    const tbody = filesTable.querySelector('tbody');
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted)">
+          <div>❌ Failed to load files: ${error.message}</div>
+        </td>
+      </tr>
+    `;
+  }
+}
 
-function renderLibrary(files) {
-  const tbody = libraryTable.querySelector('tbody');
-
+function renderFiles(files) {
+  const tbody = filesTable.querySelector('tbody');
+  
   if (!files || files.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="muted" style="text-align:center; padding:20px">No files found</td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted)">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin: 0 auto 1rem; display: block; opacity: 0.5;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14,2 14,8 20,8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10,9 9,9 8,9"></polyline>
+          </svg>
+          No files uploaded yet
+        </td>
+      </tr>
+    `;
     return;
   }
 
   tbody.innerHTML = files.map(file => {
-    // Make sure we're using the correct fileId field
-    const fileIdToDelete = file.fileId; // This should match what's stored in the database
+    const chunkCount = file.chunks ? file.chunks.length : 0;
+    const isComplete = file.status === 'active' && chunkCount >= 5;
+    const storageNodeName = file.storageNodeName || 'Unknown Node';
     
     return `
       <tr>
-        <td title="${escapeHtml(file.filename || 'Unknown')}">${escapeHtml(file.filename || 'Unknown')}</td>
-        <td>${formatFileSize(file.size || 0)}</td>
-        <td>${escapeHtml(file.mimeType || 'Unknown')}</td>
-        <td>${file.uploadedAt ? new Date(file.uploadedAt).toLocaleString() : 'Unknown'}</td>
         <td>
-          <button class="btn btn-sm ghost" onclick="downloadFile('${escapeHtml(fileIdToDelete)}', '${escapeHtml(file.filename)}')">Download</button>
-          <button class="btn btn-sm danger" onclick="deleteFile('${escapeHtml(fileIdToDelete)}', '${escapeHtml(file.filename)}')" style="margin-left:8px">Delete</button>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 32px; height: 32px; background: var(--primary); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: white;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+              </svg>
+            </div>
+            <div>
+              <div style="font-weight: 500;">${file.filename || 'Unknown'}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">${file.fileId}</div>
+            </div>
+          </div>
+        </td>
+        <td>${formatFileSize(file.size || 0)}</td>
+        <td><span style="font-size: 0.8125rem; color: var(--text-secondary);">${(file.mimeType || 'Unknown').split('/')[1] || 'Unknown'}</span></td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="node-status-dot"></div>
+            <span style="font-size: 0.875rem;">${storageNodeName}</span>
+          </div>
+        </td>
+        <td>
+          <div class="file-status">
+            <span class="status-badge ${isComplete ? 'complete' : 'incomplete'}">${chunkCount}/5 chunks</span>
+            ${isComplete ? '✅' : '⚠️'}
+          </div>
+        </td>
+        <td style="font-size: 0.8125rem; color: var(--text-secondary);">
+          ${file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'Unknown'}
+        </td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-secondary btn-sm" onclick="downloadFile('${file.fileId}', '${file.filename}')" ${!isComplete ? 'disabled' : ''}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7,10 12,15 17,10"></polyline>
+                <path d="M12 15V3"></path>
+              </svg>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteFile('${file.fileId}', '${file.filename}')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
         </td>
       </tr>
     `;
   }).join('');
 }
 
+// FILE ACTION FUNCTIONS
+function downloadFile(fileId, filename) {
+  console.log(`📥 Downloading ${filename} from distributed storage`);
+  const url = `${PLATFORM_SERVER_URL}/files/${encodeURIComponent(fileId)}/download`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
-    // Download functionality
-    function downloadFile(fileId, filename) {
-      const url = `/files/${encodeURIComponent(fileId)}/download`;
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename || 'download';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+async function deleteFile(fileId, filename) {
+  if (!confirm(`Delete "${filename}" and all its chunks from the storage network?`)) return;
+  
+  try {
+    console.log(`🗑️ Deleting ${filename} from distributed storage`);
+    const response = await fetch(`${PLATFORM_SERVER_URL}/files/${encodeURIComponent(fileId)}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
+    if (response.ok) {
+      showStatus(`✅ ${filename} deleted successfully from storage network`, 'success');
+      loadFiles();
+      updateNodeStatus();
+    } else {
+      showStatus('❌ Delete failed', 'error');
     }
+  } catch (error) {
+    showStatus('❌ Delete failed: Network error', 'error');
+  }
+}
 
-    // Delete functionality
-    async function deleteFile(fileId, filename) {
-      if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
-        return;
-      }
-      try {
-        const response = await fetch(`/files/${encodeURIComponent(fileId)}`, { 
-          method: 'DELETE' 
-        });
-        const result = await response.json();
-        if (response.ok) {
-          showStatus(`File "${filename}" deleted successfully`, 'success');
-          loadLibrary(); // Refresh library
-        } else {
-          showStatus(`Delete failed: ${result.error || 'Unknown error'}`, 'error');
-        }
-      } catch (error) {
-        console.error('Delete error:', error);
-        showStatus('Delete failed: Network error', 'error');
-      }
-    }
-
-    // Profile dropdown functionality
-    profileBtn.addEventListener('click', () => {
-      const shown = profileDropdown.classList.toggle('show');
-      profileBtn.setAttribute('aria-expanded', shown ? 'true' : 'false');
-      if (shown) profileDropdown.focus();
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!profileDropdown.contains(event.target) && event.target !== profileBtn) {
-        profileDropdown.classList.remove('show');
-        profileBtn.setAttribute('aria-expanded', 'false');
+// INITIALIZATION FUNCTIONS
+function initializeStatsAnimation() {
+  setTimeout(() => {
+    document.querySelectorAll('.stat-number').forEach((counter, index) => {
+      const target = parseFloat(counter.dataset.target);
+      if (target) {
+        counter.classList.add('counting');
+        setTimeout(() => {
+          animateValue(counter, 0, target, 1500);
+        }, index * 200);
       }
     });
+  }, 1200);
+}
 
-    // Event listeners
-    uploadBtn.addEventListener('click', uploadFiles);
-    clearBtn.addEventListener('click', () => {
-      fileInput.value = '';
-      uploadResult.style.display = 'none';
-      uploadStatus.style.display = 'none';
-      progressBar.style.display = 'none';
-      progressFill.style.width = '0%';
-    });
-    refreshLibrary.addEventListener('click', loadLibrary);
+// EVENT LISTENERS
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.classList.add('dragover');
+});
 
-    // Keyboard shortcut
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'u') {
-        e.preventDefault();
-        fileInput.click();
-      }
-    });
+uploadArea.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+});
 
-    // Initialize
-    loadLibrary();
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  fileInput.files = e.dataTransfer.files;
+  updateUploadButton();
+});
 
-    // Expose for inline handlers
-    window.downloadFile = downloadFile;
-    window.deleteFile = deleteFile;
-  </script>
+fileInput.addEventListener('change', updateUploadButton);
+uploadBtn.addEventListener('click', uploadFiles);
+clearBtn.addEventListener('click', () => {
+  fileInput.value = '';
+  uploadResults.style.display = 'none';
+  hideStatus();
+  updateUploadButton();
+});
+refreshBtn.addEventListener('click', () => {
+  loadFiles();
+  updateNodeStatus();
+});
+
+dropdownBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dropdownMenu.classList.toggle('show');
+});
+
+document.addEventListener('click', () => {
+  dropdownMenu.classList.remove('show');
+});
+
+// INITIALIZATION
+initializeStatsAnimation();
+loadFiles();
+updateNodeStatus();
+
+// PERIODIC UPDATES
+setInterval(updateNodeStatus, 30000);
+
+// GLOBAL FUNCTIONS FOR INLINE HANDLERS
+window.downloadFile = downloadFile;
+window.deleteFile = deleteFile;
+</script>
+
 </body>
 </html>
